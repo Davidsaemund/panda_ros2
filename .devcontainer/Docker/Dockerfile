@@ -1,10 +1,7 @@
 FROM ros:humble-perception
 
-ENV WS_DIR="/ros2_ws"
-WORKDIR ${WS_DIR}
 
 SHELL ["/bin/bash", "-c"]
-
 ARG DEBIAN_FRONTEND=noninteractive
 
 RUN apt-get update \
@@ -36,7 +33,6 @@ RUN apt-get install -y \
     cmake-curses-gui \
     subversion \
     wget \
-
     # Other optional 3rd parties
     python3-pip
 # Build libealsense
@@ -96,4 +92,13 @@ RUN apt install -y \
 #    && cd .. \
 #    && colcon build --cmake-args -DCMAKE_BUILD_TYPE=Release
 
+RUN addgroup realtime
+RUN usermod -a -G realtime root
 
+ENV XDG_RUNTIME_DIR=/run/user/"${USER_UID}"
+
+# set the default user to the newly created user
+USER $USERNAME
+
+RUN echo "source /ros_entrypoint.sh" >>~/.bashrc
+RUN echo "export ROS_DOMAIN_ID=100" >>~/.bashrc
