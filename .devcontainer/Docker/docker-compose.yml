@@ -1,0 +1,30 @@
+version: '3.4'
+
+services:
+  pandaros2:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    
+    device_cgroup_rules:
+      - 'c 81:* rmw'
+      - 'c 189:* rmw'
+    command: sleep infinity
+    environment:
+     - DISPLAY=${DISPLAY}
+     - QT_X11_NO_MITSHM=1
+    cap_add:
+      - SYS_NICE
+    ulimits:
+      rtprio: 99
+      rttime: -1 # corresponds to 'unlimited'
+      memlock: 8428281856
+    network_mode: "host"
+    
+    tty: true
+    volumes:
+      - ../..:/workspaces/
+      - /tmp/.X11-unix:/tmp/.X11-unix:rw
+      - /tmp/.docker.xauth:/tmp/.docker.xauth:rw
+      - /dev:/dev
+      #- ~/workspaces/visp-ros2-docker/colcon_ws:/ros2_ws
