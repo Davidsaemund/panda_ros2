@@ -36,16 +36,7 @@ RUN apt-get install -y \
     cmake-curses-gui \
     subversion \
     wget \
-    # Recommended ViSP 3rd parties
-    libopencv-dev \
-    libx11-dev \
-    liblapack-dev \
-    libeigen3-dev \
-    libv4l-dev \
-    libzbar-dev \
-    libpthread-stubs0-dev \
-    libdc1394-dev \
-    nlohmann-json3-dev \
+
     # Other optional 3rd parties
     python3-pip
 # Build libealsense

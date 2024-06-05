@@ -5,7 +5,7 @@
 	// Or use a Dockerfile or Docker Compose file. More info: https://containers.dev/guide/dockerfile
 	"dockerComposeFile": "Docker/docker-compose.yml",
 	"service": "pandaros2",
-	"workspaceFolder": "/../workspaces",
+	"workspaceFolder": "/../workspaces/src",
 	"customizations": {
 		"vscode": {
 			"extensions": [
