@@ -1,7 +1,6 @@
 FROM ros:humble-perception
 
 
-SHELL ["/bin/bash", "-c"]
 ARG DEBIAN_FRONTEND=noninteractive
 
 RUN apt-get update \
@@ -100,5 +99,5 @@ ENV XDG_RUNTIME_DIR=/run/user/"${USER_UID}"
 # set the default user to the newly created user
 USER $USERNAME
 
-RUN echo "source /ros_entrypoint.sh" >>~/.bashrc
-RUN echo "export ROS_DOMAIN_ID=100" >>~/.bashrc
+RUN echo "source /opt/ros/humble/setup.bash" >>~/.bashrc
+RUN echo "export ROS_DOMAIN_ID=15" >>~/.bashrc

@@ -61,7 +61,17 @@ FrankaParamServiceServer::FrankaParamServiceServer(const rclcpp::NodeOptions& op
       std::bind(  // NOLINT [modernize-avoid-bind]
           &FrankaParamServiceServer::setLoadCallback, this, std::placeholders::_1,
           std::placeholders::_2));
+// Set the default mass to 0.3
+  auto initial_mass_request = std::make_shared<franka_msgs::srv::SetLoad::Request>();
+  initial_mass_request->mass = 0.1;
+  initial_mass_request->center_of_mass = {0.0, 0.0, 0.0};
+  initial_mass_request->load_inertia = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
 
+  auto initial_mass_response = std::make_shared<franka_msgs::srv::SetLoad::Response>();
+  setLoadCallback(initial_mass_request, initial_mass_response);
+
+  RCLCPP_INFO(get_logger(), "Service started with default mass 0.1");
+  //added code ended
   RCLCPP_INFO(get_logger(), "Service started");
 }
 

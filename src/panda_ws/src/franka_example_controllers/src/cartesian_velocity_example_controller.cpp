@@ -1,17 +1,3 @@
-// Copyright (c) 2023 Franka Robotics GmbH
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-//     http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
-
 #include <franka_example_controllers/cartesian_velocity_example_controller.hpp>
 #include <franka_example_controllers/default_robot_behavior_utils.hpp>
 
@@ -21,6 +7,8 @@
 #include <string>
 #include <iostream>
 #include <Eigen/Eigen>
+#include <rclcpp/rclcpp.hpp>
+#include <std_msgs/msg/int32.hpp>
 
 using namespace std::chrono_literals;
 
@@ -46,25 +34,59 @@ controller_interface::return_type CartesianVelocityExampleController::update(
     const rclcpp::Duration& period) {
   elapsed_time_ = elapsed_time_ + period;
 
-  double cycle = std::floor(pow(
-      -1.0,
-      (elapsed_time_.seconds() - std::fmod(elapsed_time_.seconds(), k_time_max_)) / k_time_max_));
-  double v =
-      cycle * k_v_max_ / 2.0 * (1.0 - std::cos(2.0 * M_PI / k_time_max_ * elapsed_time_.seconds()));
-  //double v_test = v_test + 0.001;
+  // double cycle = std::floor(pow(
+  //     -1.0,
+  //     (elapsed_time_.seconds() - std::fmod(elapsed_time_.seconds(), k_time_max_)) / k_time_max_));
+  // double v =
+  //     cycle * k_v_max_ / 2.0 * (1.0 - std::cos(2.0 * M_PI / k_time_max_ * elapsed_time_.seconds()));
 
-  double v_x = std::cos(k_angle_) * v;
-  double v_z = -std::sin(k_angle_) * v;
-
-  Eigen::Vector3d cartesian_linear_velocity(0.0, -0.006, 0.0);
-  Eigen::Vector3d cartesian_angular_velocity(0.0, 0.0, 0.0);
-  //std::cout <<"The value of v_x is: " << v_x << "and v_z is: "<< v_z << std::endl;
-  static int counter = 0;
-  if(counter++%100 == 0){
-      RCLCPP_INFO_STREAM(get_node()->get_logger(),
-  "The value of v_x is: " << v_x << "and v_z is: "<< v_z);
-  }
+  // double v_x = std::cos(k_angle_) * v;
+  // double v_z = -std::sin(k_angle_) * v;
   
+ static double v_y = 0.0;
+  static double v_step = 0.00001;
+  static double v_max = 0.02;
+
+  switch (classify_result_) {
+    case 0:
+      if (v_y < v_max) {
+        v_y += v_step;
+      }
+      if (v_y > v_max) {
+        v_y = v_max; // Ensure v_y does not exceed v_max
+      }
+      break;
+    case 1:
+      if (v_y > 0.0) {
+        v_y -= v_step;
+        if (v_y < 0.0) {
+          v_y = 0.0; // Ensure v_y does not go below 0
+        }
+      } else if (v_y < 0.0) {
+        v_y += v_step;
+        if (v_y > 0.0) {
+          v_y = 0.0; // Ensure v_y does not go above 0
+        }
+      }
+      break;
+    case 2:
+      if (v_y > -v_max) {
+        v_y -= v_step;
+      }
+      if (v_y < -v_max) {
+        v_y = -v_max; // Ensure v_y does not exceed -v_max
+      }
+      break;
+    default:
+      break;
+  }
+  Eigen::Vector3d cartesian_linear_velocity(0.0, v_y, 0.0);
+  Eigen::Vector3d cartesian_angular_velocity(0.0, 0.0, 0.0);
+
+  static int counter = 0;
+  if (counter++ % 100 == 0) {
+    RCLCPP_INFO_STREAM(get_node()->get_logger(), "The value is: " << v_y);
+  }
 
   if (franka_cartesian_velocity_->setCommand(cartesian_linear_velocity,
                                              cartesian_angular_velocity)) {
@@ -101,6 +123,11 @@ CallbackReturn CartesianVelocityExampleController::on_configure(
     RCLCPP_INFO(get_node()->get_logger(), "Default collision behavior set.");
   }
 
+  classify_results_subscriber_ = get_node()->create_subscription<std_msgs::msg::Int32>(
+    "classify_results",
+    10,
+    std::bind(&CartesianVelocityExampleController::classifyResultsCallback, this, std::placeholders::_1)
+  );
   return CallbackReturn::SUCCESS;
 }
 
@@ -108,8 +135,6 @@ CallbackReturn CartesianVelocityExampleController::on_activate(
     const rclcpp_lifecycle::State& /*previous_state*/) {
   franka_cartesian_velocity_->assign_loaned_command_interfaces(command_interfaces_);
   elapsed_time_ = rclcpp::Duration(0, 0);
-  //double v_test = 0.00001;
-  
   return CallbackReturn::SUCCESS;
 }
 
@@ -119,7 +144,12 @@ controller_interface::CallbackReturn CartesianVelocityExampleController::on_deac
   return CallbackReturn::SUCCESS;
 }
 
+void CartesianVelocityExampleController::classifyResultsCallback(const std_msgs::msg::Int32::SharedPtr msg) {
+  classify_result_ = msg->data;
+}
+
 }  // namespace franka_example_controllers
+
 #include "pluginlib/class_list_macros.hpp"
 // NOLINTNEXTLINE
 PLUGINLIB_EXPORT_CLASS(franka_example_controllers::CartesianVelocityExampleController,

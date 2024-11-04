@@ -18,7 +18,7 @@
 
 #include <controller_interface/controller_interface.hpp>
 #include <rclcpp/rclcpp.hpp>
-
+#include <std_msgs/msg/int32.hpp>
 #include <franka_semantic_components/franka_cartesian_velocity_interface.hpp>
 
 using CallbackReturn = rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn;
@@ -40,10 +40,16 @@ class CartesianVelocityExampleController : public controller_interface::Controll
   CallbackReturn on_configure(const rclcpp_lifecycle::State& previous_state) override;
   CallbackReturn on_activate(const rclcpp_lifecycle::State& previous_state) override;
   CallbackReturn on_deactivate(const rclcpp_lifecycle::State& previous_state) override;
+  void classifyResultsCallback(const std_msgs::msg::Int32::SharedPtr msg);
 
  private:
+
   std::unique_ptr<franka_semantic_components::FrankaCartesianVelocityInterface>
       franka_cartesian_velocity_;
+
+  rclcpp::Subscription<std_msgs::msg::Int32>::SharedPtr classify_results_subscriber_;
+  
+  int classify_result_ = -1;  // Initialize with a default value
 
   const double k_time_max_{4.0};
   const double k_v_max_{0.05};

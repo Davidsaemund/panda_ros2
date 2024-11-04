@@ -71,7 +71,11 @@ controller_interface::return_type MoveToStartExampleController::update(
 }
 
 CallbackReturn MoveToStartExampleController::on_init() {
-  q_goal_ << 0, -M_PI_4, 0, -3 * M_PI_4, 0, M_PI_2, M_PI_4;
+  // Start q_goal
+  //q_goal_ << 0, -M_PI_4, 0, -3 * M_PI_4, 0, M_PI_2, M_PI_4;
+  // Modified q_goal
+  // 0°, - 100°, 0°, -168°, 0°, 160°, 45°
+  q_goal_ << 0, -1.2217, 0, -2.4435, 0, 2.6180 , M_PI_4;
   try {
     auto_declare<bool>("process_finished", false);
     auto_declare<std::string>("arm_id", "panda");

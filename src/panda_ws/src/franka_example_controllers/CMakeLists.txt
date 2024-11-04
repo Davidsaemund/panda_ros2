@@ -26,6 +26,7 @@ find_package(franka_semantic_components REQUIRED)
 find_package(generate_parameter_library)
 find_package(moveit_core REQUIRED)
 find_package(moveit_msgs REQUIRED)
+find_package(tutorial_interfaces REQUIRED)
 
 add_library(
         ${PROJECT_NAME}
@@ -59,6 +60,7 @@ ament_target_dependencies(
         franka_semantic_components
         moveit_core
         moveit_msgs
+        tutorial_interfaces
 )
 
 generate_parameter_library(franka_example_controllers_parameters src/model_example_controller_parameters.yaml)
