@@ -51,8 +51,8 @@ class CartesianVelocityExampleController : public controller_interface::Controll
   
   int classify_result_ = -1;  // Initialize with a default value
 
-  const double k_time_max_{4.0};
-  const double k_v_max_{0.05};
+  const double k_time_max_{10.0};
+  const double k_v_max_{0.12};
   const double k_angle_{M_PI / 4.0};
   const bool k_elbow_activated_{false};
 

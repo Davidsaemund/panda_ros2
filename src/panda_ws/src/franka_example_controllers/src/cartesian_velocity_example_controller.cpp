@@ -28,35 +28,19 @@ CartesianVelocityExampleController::state_interface_configuration() const {
   return controller_interface::InterfaceConfiguration{
       controller_interface::interface_configuration_type::NONE};
 }
-
+double y_offset_ = 1.0;
 controller_interface::return_type CartesianVelocityExampleController::update(
     const rclcpp::Time& /*time*/,
     const rclcpp::Duration& period) {
   elapsed_time_ = elapsed_time_ + period;
 
-  // double cycle = std::floor(pow(
-  //     -1.0,
-  //     (elapsed_time_.seconds() - std::fmod(elapsed_time_.seconds(), k_time_max_)) / k_time_max_));
-  // double v =
-  //     cycle * k_v_max_ / 2.0 * (1.0 - std::cos(2.0 * M_PI / k_time_max_ * elapsed_time_.seconds()));
 
-  // double v_x = std::cos(k_angle_) * v;
-  // double v_z = -std::sin(k_angle_) * v;
-  
- static double v_y = 0.0;
-  static double v_step = 0.00001;
-  static double v_max = 0.02;
+  static double v_y = 0.0;
+  static double v_step = 0.00001*2;
+  static double v_max = 0.02*2;
 
   switch (classify_result_) {
-    case 0:
-      if (v_y < v_max) {
-        v_y += v_step;
-      }
-      if (v_y > v_max) {
-        v_y = v_max; // Ensure v_y does not exceed v_max
-      }
-      break;
-    case 1:
+      case 0:
       if (v_y > 0.0) {
         v_y -= v_step;
         if (v_y < 0.0) {
@@ -69,7 +53,28 @@ controller_interface::return_type CartesianVelocityExampleController::update(
         }
       }
       break;
+    case 1:
+      if (v_y < v_max) {
+        v_y += v_step;
+      }
+      if (v_y > v_max) {
+        v_y = v_max; // Ensure v_y does not exceed v_max
+      }
+      break;
     case 2:
+      if (v_y > 0.0) {
+        v_y -= v_step;
+        if (v_y < 0.0) {
+          v_y = 0.0; // Ensure v_y does not go below 0
+        }
+      } else if (v_y < 0.0) {
+        v_y += v_step;
+        if (v_y > 0.0) {
+          v_y = 0.0; // Ensure v_y does not go above 0
+        }
+      }
+      break;
+    case 3:
       if (v_y > -v_max) {
         v_y -= v_step;
       }
@@ -80,12 +85,13 @@ controller_interface::return_type CartesianVelocityExampleController::update(
     default:
       break;
   }
+
   Eigen::Vector3d cartesian_linear_velocity(0.0, v_y, 0.0);
   Eigen::Vector3d cartesian_angular_velocity(0.0, 0.0, 0.0);
 
   static int counter = 0;
   if (counter++ % 100 == 0) {
-    RCLCPP_INFO_STREAM(get_node()->get_logger(), "The value is: " << v_y);
+    RCLCPP_INFO_STREAM(get_node()->get_logger(), "The value is: " << v_y << ", Classify results: " << classify_result_ );
   }
 
   if (franka_cartesian_velocity_->setCommand(cartesian_linear_velocity,
